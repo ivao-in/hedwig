@@ -1,2 +1,3 @@
 require('dotenv').config();
-require('./crons');
+require('../app/server');
+// require('./crons');

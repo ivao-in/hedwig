@@ -1,7 +1,0 @@
-{
-  "apps": [{
-    "name": "Hedwig",
-    "script": "node",
-    "args": "src/index.js"
-  }]
-}

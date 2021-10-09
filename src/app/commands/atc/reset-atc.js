@@ -28,8 +28,10 @@ module.exports = class ResetAtcCommand extends Command {
       .setFooter(this.client.user.username)
       .setTimestamp();
 
-    (await msg.embed(donateEmbed)).delete({
-      timeout: 10000,
-    }).then(() => msg.delete());
+    (await msg.embed(donateEmbed))
+      .delete({
+        timeout: 10000
+      })
+      .then(() => msg.delete());
   }
 };

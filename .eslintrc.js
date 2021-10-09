@@ -17,6 +17,7 @@ module.exports = {
     // These rules relate to possible syntax or
     // logic errors in the code.
     /* ======================================= */
+    'class-methods-use-this': ['off'],
     'for-direction': ['error'],
     'getter-return': ['error'],
     'no-async-promise-executor': ['off'],

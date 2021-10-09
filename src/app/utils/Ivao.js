@@ -46,20 +46,20 @@ function storeAtcData(activeAtcs) {
           data[atc.vid].lastFrequency = atc.frequency;
         }
       } else {
-        logger.info(`${atc.vid} [${atc.callsign}] connected!`)
+        logger.info(`${atc.vid} [${atc.callsign}] connected!`);
         data[atc.vid].lastSession = atc.connectionMilliseconds;
         data[atc.vid].lastCallsign = atc.callsign;
         data[atc.vid].lastFrequency = atc.frequency;
         data[atc.vid].online = true;
       }
     } else {
-      logger.info(`${atc.vid} [${atc.callsign}] connected!`)
+      logger.info(`${atc.vid} [${atc.callsign}] connected!`);
       data[atc.vid] = {
         milliseconds: 0,
         lastSession: atc.connectionMilliseconds,
         lastCallsign: atc.callsign,
         lastFrequency: atc.frequency,
-        online: true,
+        online: true
       };
     }
   });
@@ -73,7 +73,7 @@ function storeAtcData(activeAtcs) {
     });
 
     if (!found && data[key].online === true) {
-      logger.info(`${key} [${data[key].lastCallsign}] disconnected!`)
+      logger.info(`${key} [${data[key].lastCallsign}] disconnected!`);
       data[key].milliseconds += data[key].lastSession;
       data[key].lastSession = 0;
       data[key].lastCallsign = '';
@@ -106,9 +106,9 @@ function storePilotData(activePilots, type) {
     if (data[pilot.vid]) {
       if (data[pilot.vid].online) {
         if (
-          data[pilot.vid].lastCallsign === pilot.callsign
-          && data[pilot.vid].lastDepartureAerodrome === pilot.departureAerodrome
-          && data[pilot.vid].lastDestinationAerodrome === pilot.destinationAerodrome
+          data[pilot.vid].lastCallsign === pilot.callsign &&
+          data[pilot.vid].lastDepartureAerodrome === pilot.departureAerodrome &&
+          data[pilot.vid].lastDestinationAerodrome === pilot.destinationAerodrome
         ) {
           if (pilot.connectionMilliseconds < data[pilot.vid].lastSession) {
             data[pilot.vid].milliseconds += data[pilot.vid].lastSession;
@@ -123,7 +123,7 @@ function storePilotData(activePilots, type) {
           data[pilot.vid].lastDepartureTime = pilot.departureTime;
         }
       } else {
-        logger.info(`${pilot.vid} [${pilot.callsign}] connected!`)
+        logger.info(`${pilot.vid} [${pilot.callsign}] connected!`);
         data[pilot.vid].lastSession = pilot.connectionMilliseconds;
         data[pilot.vid].lastCallsign = pilot.callsign;
         data[pilot.vid].lastDepartureAerodrome = pilot.departureAerodrome;
@@ -132,7 +132,7 @@ function storePilotData(activePilots, type) {
         data[pilot.vid].online = true;
       }
     } else {
-      logger.info(`${pilot.vid} [${pilot.callsign}] connected!`)
+      logger.info(`${pilot.vid} [${pilot.callsign}] connected!`);
       data[pilot.vid] = {
         milliseconds: 0,
         lastSession: pilot.connectionMilliseconds,
@@ -140,7 +140,7 @@ function storePilotData(activePilots, type) {
         lastDepartureAerodrome: pilot.departureAerodrome,
         lastDestinationAerodrome: pilot.destinationAerodrome,
         lastDepartureTime: pilot.departureTime,
-        online: true,
+        online: true
       };
     }
   });
@@ -154,7 +154,7 @@ function storePilotData(activePilots, type) {
     });
 
     if (!found && data[key].online === true) {
-      logger.info(`${key} [${data[key].lastCallsign}] disconnected!`)
+      logger.info(`${key} [${data[key].lastCallsign}] disconnected!`);
       data[key].milliseconds += data[key].lastSession;
       data[key].lastSession = 0;
       data[key].lastCallsign = '';
@@ -176,10 +176,7 @@ function storePilotData(activePilots, type) {
 
 module.exports = class Ivao {
   static async downloadData() {
-
-    const [, general, clients, airports, servers] = (await api.get(null)).data
-      .split(/!GENERAL|!CLIENTS|!AIRPORTS|!SERVERS/g)
-      .map((r) => r.trim());
+    const [, general, clients, airports, servers] = (await api.get(null)).data.split(/!GENERAL|!CLIENTS|!AIRPORTS|!SERVERS/g).map((r) => r.trim());
 
     general.split('\n').forEach((g) => {
       const t = g.split('=').map((r) => r.trim());
@@ -210,7 +207,6 @@ module.exports = class Ivao {
     const arrivingPilots = [];
 
     clients.split('\n').forEach((c) => {
-
       const t = c.split(':').map((r) => r.trim());
 
       if (t[3] === 'ATC' && t[0].match(atcCallsignRegex)) {
@@ -219,7 +215,7 @@ module.exports = class Ivao {
           callsign: t[0],
           frequency: t[4],
           connectionStartTime: new Date(formatDate(t[37])),
-          connectionMilliseconds: new Date() - new Date(formatDate(t[37])),
+          connectionMilliseconds: new Date() - new Date(formatDate(t[37]))
         };
         atcs.push(atc);
       }
@@ -230,13 +226,14 @@ module.exports = class Ivao {
           callsign: t[0],
           departureAerodrome: t[11],
           destinationAerodrome: t[13],
-          departureTime: t[22].length === 2
-            ? `00:${t[22].substring(0, 2)}z`
-            : t[22].length === 3
+          departureTime:
+            t[22].length === 2
+              ? `00:${t[22].substring(0, 2)}z`
+              : t[22].length === 3
               ? `0${t[22].substring(0, 1)}:${t[22].substring(1, 3)}z`
               : `${t[22].substring(0, 2)}:${t[22].substring(2, 4)}z`,
           connectionStartTime: new Date(formatDate(t[37])),
-          connectionMilliseconds: new Date() - new Date(formatDate(t[37])),
+          connectionMilliseconds: new Date() - new Date(formatDate(t[37]))
         };
         if (t[11].match(indianAirspaceRegex)) {
           departingPilots.push(pilot);

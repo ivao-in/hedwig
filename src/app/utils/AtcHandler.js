@@ -14,8 +14,7 @@ atcCache.flushAll();
 
 const objectsEqual = (o1, o2) =>
   typeof o1 === 'object' && Object.keys(o1).length > 0
-    ? Object.keys(o1).length === Object.keys(o2).length
-    && Object.keys(o1).every(p => objectsEqual(o1[p], o2[p]))
+    ? Object.keys(o1).length === Object.keys(o2).length && Object.keys(o1).every((p) => objectsEqual(o1[p], o2[p]))
     : o1 === o2;
 
 const arraysEqual = (a1, a2) =>
@@ -26,26 +25,28 @@ const getOnlineAtc = () => {
   data = JSON.parse(data);
   const onlineAtc = [];
 
-  Object.keys(data).forEach(key => {
+  Object.keys(data).forEach((key) => {
     if (data[key].online) {
       onlineAtc.push({ vid: key, ...data[key] });
     }
   });
 
-  return onlineAtc.map((a) => ({
+  return onlineAtc
+    .map((a) => ({
       vid: a.vid,
       lastCallsign: a.lastCallsign,
       lastFrequency: a.lastFrequency
-    })).sort((a, b) => {
-    if (a.lastCallsign > b.lastCallsign) {
-      return 1;
-    } else if (a.lastCallsign < b.lastCallsign) {
-      return -1;
-    } else {
-      return 0;
-    }
-  });
-}
+    }))
+    .sort((a, b) => {
+      if (a.lastCallsign > b.lastCallsign) {
+        return 1;
+      } else if (a.lastCallsign < b.lastCallsign) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+};
 
 const atcHandler = async () => {
   const now = dayjs().utc();
@@ -62,24 +63,24 @@ const atcHandler = async () => {
   const atcList = getOnlineAtc();
 
   if (messages?.length > 0 && arraysEqual(cacheValue, atcList)) {
-    messages.forEach(message => {
+    messages.forEach((message) => {
       const existingMessage = message.embeds[0];
 
       existingMessage
         .setTitle(`Online ATC (India) | ${now.format('DD MMM, HH:mmz')}`)
         .setFooter(`${client.user.username} • ${existingMessage.footer.text.split(' • ')[1]} • Updated at ${now.format('HH:mmz')}`);
 
-      message.edit(existingMessage)
-    })
+      message.edit(existingMessage);
+    });
 
     return;
   }
 
-  messages.forEach(message => {
+  messages.forEach((message) => {
     if (message.deletable) {
       message.delete();
     }
-  })
+  });
 
   if (atcList?.length === 0) {
     const atcEmbed = new MessageEmbed()
@@ -87,7 +88,7 @@ const atcHandler = async () => {
       .setColor('#A1ADEE')
       .setURL('https://webeye.ivao.aero/')
       .setFooter(client.user.username)
-      .setDescription('No ATC are online right now')
+      .setDescription('No ATC are online right now');
 
     await atcChannel.send(atcEmbed.setFooter(`${client.user.username} • Message 1 of 1 • Updated at ${now.format('HH:mmz')}`));
   } else {
@@ -97,14 +98,14 @@ const atcHandler = async () => {
       .setTitle(`Online ATC (India) | ${now.format('DD MMM, HH:mmz')}`)
       .setColor('#A1ADEE')
       .setURL('https://webeye.ivao.aero/')
-      .setFooter(client.user.username)
+      .setFooter(client.user.username);
 
     let desc = '';
 
-    atcList.forEach(atc => {
+    atcList.forEach((atc) => {
       if (desc.length > 900) {
-        atcEmbed.setDescription(desc)
-        embeds.push(atcEmbed)
+        atcEmbed.setDescription(desc);
+        embeds.push(atcEmbed);
         atcEmbed = new MessageEmbed()
           .setTitle(`Online ATC (India) | ${now.format('DD MMM, HH:mmz')}`)
           .setColor('#A1ADEE')
@@ -114,21 +115,23 @@ const atcHandler = async () => {
         desc = '';
       }
 
-      desc += `*${atc.vid}* | **${atc.lastCallsign}** [${atc.lastFrequency}]`
-      desc += '\n'
+      desc += `*${atc.vid}* | **${atc.lastCallsign}** [${atc.lastFrequency}]`;
+      desc += '\n';
     });
 
-    atcEmbed.setDescription(desc)
+    atcEmbed.setDescription(desc);
 
-    embeds.push(atcEmbed)
+    embeds.push(atcEmbed);
 
     for (let i = 0; i < embeds.length; i += 1) {
       // eslint-disable-next-line no-await-in-loop
-      await atcChannel.send(embeds[i].setFooter(`${client.user.username} • Message ${i + 1} of ${embeds.length} • Updated at ${now.format('HH:mmz')}`));
+      await atcChannel.send(
+        embeds[i].setFooter(`${client.user.username} • Message ${i + 1} of ${embeds.length} • Updated at ${now.format('HH:mmz')}`)
+      );
     }
   }
 
   atcCache.set('in', atcList);
-}
+};
 
 module.exports = atcHandler;

@@ -29,8 +29,10 @@ module.exports = class ResetPilotCommand extends Command {
       .setFooter(this.client.user.username)
       .setTimestamp();
 
-    (await msg.embed(donateEmbed)).delete({
-      timeout: 10000,
-    }).then(() => msg.delete());
+    (await msg.embed(donateEmbed))
+      .delete({
+        timeout: 10000
+      })
+      .then(() => msg.delete());
   }
 };

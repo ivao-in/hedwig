@@ -1,5 +1,6 @@
 const path = require('path');
 const { CommandoClient } = require('discord.js-commando');
+
 const services = require('../config/services');
 const logger = require('./utils/Logger');
 
@@ -16,7 +17,7 @@ client.registry
     ['util', 'Utility commands'],
     // ['auth', 'Authentication commands'],
     ['atc', 'ATC commands'],
-    ['pilot', 'Pilot commands'],
+    ['pilot', 'Pilot commands']
   ])
   .registerCommandsIn(path.join(__dirname, 'commands'));
 
