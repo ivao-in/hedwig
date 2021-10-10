@@ -12,6 +12,9 @@ dayjs.extend(utc);
 const atcCache = new NodeCache({ stdTTL: 24 * 60 * 60 });
 atcCache.flushAll();
 
+const atcHallOfFameCache = new NodeCache({ stdTTL: 24 * 60 * 60 });
+atcHallOfFameCache.flushAll();
+
 const objectsEqual = (o1, o2) =>
   typeof o1 === 'object' && Object.keys(o1).length > 0
     ? Object.keys(o1).length === Object.keys(o2).length && Object.keys(o1).every((p) => objectsEqual(o1[p], o2[p]))
@@ -48,11 +51,97 @@ const getOnlineAtc = () => {
     });
 };
 
+const getHallOfFameAtc = () => {
+  let data = fs.readFileSync(`${process.cwd()}/data/atc.json`, 'utf8');
+  data = JSON.parse(data);
+  const hallOfFameAtc = [];
+
+  Object.keys(data).forEach((key) => {
+    hallOfFameAtc.push({ vid: key, ...data[key] });
+  });
+
+  return hallOfFameAtc
+    .map((a) => ({
+      vid: a.vid,
+      minutes: Math.floor(a.milliseconds / 60000),
+    }))
+    .sort((a, b) => {
+      if (a.minutes > b.minutes) {
+        return -1;
+      } else if (a.minutes < b.minutes) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }).slice(0, 10);
+}
+
+
+const hallOfFameHandler = async () => {
+  const now = dayjs().utc();
+
+  const atcHallOfFameChannel = await client.channels.fetch(services.ivao.channels.atcHallOfFame);
+  if (!atcHallOfFameChannel) {
+    logger.error('Could not find ATC Hall of Fame channel');
+    return;
+  }
+
+  const messages = (await atcHallOfFameChannel.messages.fetch()).array();
+
+  const cacheValue = atcHallOfFameCache.get('in');
+
+  const atcHallOfFameList = getHallOfFameAtc();
+
+  if (messages?.length === 1 && arraysEqual(cacheValue, atcHallOfFameList)) {
+    const existingMessage = messages[0].embeds[0]
+
+    existingMessage
+      .setFooter(`${client.user.username} • Updated at ${now.format('HH:mmz')}`);
+
+    messages[0].edit(existingMessage);
+
+    return;
+  }
+
+  messages.forEach((message) => {
+    if (message.deletable) {
+      message.delete();
+    }
+  });
+
+  if (atcHallOfFameList.length === 0 || atcHallOfFameList[0].minutes === 0) {
+    const atcHallOfFameEmbed = new MessageEmbed()
+      .setTitle(`🏆 ATC Hall of Fame 🏆`)
+      .setColor('#A1ADEE')
+      .setDescription(`Not enough ATCs data available.`)
+      .setFooter(`${client.user.username} • Updated at ${now.format('HH:mmz')}`);
+
+    await atcHallOfFameChannel.send(atcHallOfFameEmbed);
+  } else {
+
+    const ranks = [':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:', ':ten:'];
+
+    const description = atcHallOfFameList
+      .filter((a) => a.minutes > 0)
+      .map((a, i) => `${ranks[i]} **[${a.vid}](https://www.ivao.aero/Member.aspx?Id=${a.vid})** [${a.minutes} minutes]`).join('\n')
+    const atcHallOfFameEmbed = new MessageEmbed()
+      .setTitle(`🏆 ATC Hall of Fame 🏆`)
+      .setColor('#A1ADEE')
+      .setDescription(`${description}`)
+      .setFooter(`${client.user.username} • Updated at ${now.format('HH:mmz')}`);
+
+    await atcHallOfFameChannel.send(atcHallOfFameEmbed);
+  }
+
+  atcHallOfFameCache.set('in', atcHallOfFameList);
+}
+
 const atcHandler = async () => {
   const now = dayjs().utc();
 
   const atcChannel = await client.channels.fetch(services.ivao.channels.atc);
   if (!atcChannel) {
+    logger.error('Could not find ATC channel');
     return;
   }
 
@@ -134,4 +223,4 @@ const atcHandler = async () => {
   atcCache.set('in', atcList);
 };
 
-module.exports = atcHandler;
+module.exports = { atcHandler, hallOfFameHandler };

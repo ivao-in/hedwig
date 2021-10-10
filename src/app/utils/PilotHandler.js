@@ -78,6 +78,7 @@ const pilotHandler = async () => {
 
   const pilotChannel = await client.channels.fetch(services.ivao.channels.pilot);
   if (!pilotChannel) {
+    logger.error('Could not find Pilot channel');
     return;
   }
 

@@ -12,7 +12,8 @@ module.exports = {
     server: process.env.IVAO_SERVER,
     channels: {
       atc: process.env.ATC_CHANNEL,
-      pilot: process.env.PILOT_CHANNEL
+      pilot: process.env.PILOT_CHANNEL,
+      atcHallOfFame: process.env.ATC_HALL_OF_FAME_CHANNEL
     }
   },
   jwt: {
