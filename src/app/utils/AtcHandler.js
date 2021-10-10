@@ -119,7 +119,7 @@ const hallOfFameHandler = async () => {
     await atcHallOfFameChannel.send(atcHallOfFameEmbed);
   } else {
 
-    const ranks = [':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:', ':ten:'];
+    const ranks = [':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:', ':keycap_ten:'];
 
     const description = atcHallOfFameList
       .filter((a) => a.minutes > 0)
