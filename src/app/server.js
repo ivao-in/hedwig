@@ -5,6 +5,7 @@ const DiscordOauth2 = require('discord-oauth2');
 
 const services = require('../config/services');
 const client = require('./client');
+const logger = require('./utils/Logger');
 
 const app = express();
 
@@ -19,7 +20,7 @@ const oauth = new DiscordOauth2({
 app.get('/discord/takeoff/:ivao_id', (req, res) => {
   const ivaoId = req.params.ivao_id;
   const state = nanoid(50);
-  console.log(`[${ivaoId}] Taking off to Discord OAuth`);
+  logger.info(`${ivaoId} taking off to Discord OAuth`);
   users[state] = ivaoId;
 
   const url = oauth.generateAuthUrl({
@@ -36,7 +37,7 @@ app.get('/discord/landing', async (request, response) => {
     return response.status(400).send('Invalid Code');
   }
   const vid = users[state];
-  console.log(`[${vid}] Landing from Discord OAuth`);
+  logger.info(`${vid} landing from Discord OAuth`);
   delete users[state];
   if (!vid) {
     return response.status(400).send('Invalid State');
@@ -125,8 +126,8 @@ app.get('/discord/landing', async (request, response) => {
     }
   }
 
-  response.redirect(`https://discord.com/channels/${services.ivao.server}`);
+  return response.redirect(`https://discord.com/channels/${services.ivao.server}`);
   // return response.send('You have successfully joined the IVAO IN Discord Server. You can now close this page and return to the Discord application.');
 });
 
-app.listen(services.port, () => console.log(`App listening at PORT ${services.port}`));
+app.listen(services.port, () => logger.info(`App listening at PORT ${services.port}`));

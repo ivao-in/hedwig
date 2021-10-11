@@ -19,8 +19,8 @@ const ivao = {
   servers: {}
 };
 
-const atcCallsignRegex = /^V[AEIO][A-Z]{2}_[A-Z_]*$/;
-// const atcCallsignRegex = /^[A-Z]{4}_[A-Z_]*$/;
+// const atcCallsignRegex = /^V[AEIO][A-Z]{2}_[A-Z_]*$/;
+const atcCallsignRegex = /^[A-Z]{4}_[A-Z_]*$/;
 const indianAirspaceRegex = /^V[AEIO][A-Z]{2}$/;
 
 function formatDate(date) {
@@ -176,6 +176,8 @@ function storePilotData(activePilots, type) {
 
 module.exports = class Ivao {
   static async downloadData() {
+    const now = dayjs().utc();
+
     const [, general, clients, airports, servers] = (await api.get(null)).data.split(/!GENERAL|!CLIENTS|!AIRPORTS|!SERVERS/g).map((r) => r.trim());
 
     general.split('\n').forEach((g) => {
@@ -244,14 +246,30 @@ module.exports = class Ivao {
       }
     });
 
+    if (!fs.existsSync(`${process.cwd()}/data/metadata.json`)) {
+      fs.writeFileSync(`${process.cwd()}/data/metadata.json`, JSON.stringify({}), 'utf8');
+    }
+
     if (!fs.existsSync(`${process.cwd()}/data/atc.json`)) {
       fs.writeFileSync(`${process.cwd()}/data/atc.json`, JSON.stringify({}));
+      let data = fs.readFileSync(`${process.cwd()}/data/metadata.json`, 'utf8');
+      data = JSON.parse(data);
+      data.atc = now;
+      fs.writeFileSync(`${process.cwd()}/data/metadata.json`, JSON.stringify(data), 'utf8');
     }
     if (!fs.existsSync(`${process.cwd()}/data/pilot_departing.json`)) {
       fs.writeFileSync(`${process.cwd()}/data/pilot_departing.json`, JSON.stringify({}));
+      let data = fs.readFileSync(`${process.cwd()}/data/metadata.json`, 'utf8');
+      data = JSON.parse(data);
+      data.pilot_departing = now;
+      fs.writeFileSync(`${process.cwd()}/data/metadata.json`, JSON.stringify(data), 'utf8');
     }
     if (!fs.existsSync(`${process.cwd()}/data/pilot_arriving.json`)) {
       fs.writeFileSync(`${process.cwd()}/data/pilot_arriving.json`, JSON.stringify({}));
+      let data = fs.readFileSync(`${process.cwd()}/data/metadata.json`, 'utf8');
+      data = JSON.parse(data);
+      data.pilot_arriving = now;
+      fs.writeFileSync(`${process.cwd()}/data/metadata.json`, JSON.stringify(data), 'utf8');
     }
     storeAtcData(atcs);
     storePilotData(departingPilots, 'departing');

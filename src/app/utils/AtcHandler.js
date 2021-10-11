@@ -63,7 +63,7 @@ const getHallOfFameAtc = () => {
   return hallOfFameAtc
     .map((a) => ({
       vid: a.vid,
-      minutes: Math.floor(a.milliseconds / 60000),
+      minutes: Math.floor((a.milliseconds + a.lastSession) / 60000)
     }))
     .sort((a, b) => {
       if (a.minutes > b.minutes) {
@@ -73,9 +73,9 @@ const getHallOfFameAtc = () => {
       } else {
         return 0;
       }
-    }).slice(0, 10);
-}
-
+    })
+    .slice(0, 10);
+};
 
 const hallOfFameHandler = async () => {
   const now = dayjs().utc();
@@ -86,6 +86,9 @@ const hallOfFameHandler = async () => {
     return;
   }
 
+  let metadata = fs.readFileSync(`${process.cwd()}/data/metadata.json`, 'utf8');
+  metadata = JSON.parse(metadata);
+
   const messages = (await atcHallOfFameChannel.messages.fetch()).array();
 
   const cacheValue = atcHallOfFameCache.get('in');
@@ -93,10 +96,11 @@ const hallOfFameHandler = async () => {
   const atcHallOfFameList = getHallOfFameAtc();
 
   if (messages?.length === 1 && arraysEqual(cacheValue, atcHallOfFameList)) {
-    const existingMessage = messages[0].embeds[0]
+    const existingMessage = messages[0].embeds[0];
 
-    existingMessage
-      .setFooter(`${client.user.username} • Updated at ${now.format('HH:mmz')}`);
+    existingMessage.setFooter(
+      `${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM HH:mmz')} • Updated at ${now.format('HH:mmz')}`
+    );
 
     messages[0].edit(existingMessage);
 
@@ -114,27 +118,30 @@ const hallOfFameHandler = async () => {
       .setTitle(`🏆 ATC Hall of Fame 🏆`)
       .setColor('#A1ADEE')
       .setDescription(`Not enough ATCs data available.`)
-      .setFooter(`${client.user.username} • Updated at ${now.format('HH:mmz')}`);
+      .setFooter(`${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM HH:mmz')} • Updated at ${now.format('HH:mmz')}`);
 
     await atcHallOfFameChannel.send(atcHallOfFameEmbed);
   } else {
-
     const ranks = [':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:', ':keycap_ten:'];
 
     const description = atcHallOfFameList
       .filter((a) => a.minutes > 0)
-      .map((a, i) => `${ranks[i]} **[${a.vid}](https://www.ivao.aero/Member.aspx?Id=${a.vid})** [${a.minutes} minutes]`).join('\n')
+      .map(
+        (a, i) =>
+          `${ranks[i]} **[${a.vid}](https://www.ivao.aero/Member.aspx?Id=${a.vid})** | ${Math.floor(a.minutes / 60)} hrs ${a.minutes % 60} mins`
+      )
+      .join('\n');
     const atcHallOfFameEmbed = new MessageEmbed()
       .setTitle(`🏆 ATC Hall of Fame 🏆`)
       .setColor('#A1ADEE')
       .setDescription(`${description}`)
-      .setFooter(`${client.user.username} • Updated at ${now.format('HH:mmz')}`);
+      .setFooter(`${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM HH:mmz')} • Updated at ${now.format('HH:mmz')}`);
 
     await atcHallOfFameChannel.send(atcHallOfFameEmbed);
   }
 
   atcHallOfFameCache.set('in', atcHallOfFameList);
-}
+};
 
 const atcHandler = async () => {
   const now = dayjs().utc();
