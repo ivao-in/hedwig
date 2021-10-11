@@ -13,7 +13,8 @@ module.exports = {
     channels: {
       atc: process.env.ATC_CHANNEL,
       pilot: process.env.PILOT_CHANNEL,
-      atcHallOfFame: process.env.ATC_HALL_OF_FAME_CHANNEL
+      atcHallOfFame: process.env.ATC_HALL_OF_FAME_CHANNEL,
+      memberJoin: process.env.MEMBER_JOIN_CHANNEL
     }
   },
   jwt: {

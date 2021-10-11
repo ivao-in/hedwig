@@ -17,18 +17,31 @@ const oauth = new DiscordOauth2({
   redirectUri: `${services.host}/discord/landing`
 });
 
-app.get('/discord/takeoff/:ivao_id', (req, res) => {
-  const ivaoId = req.params.ivao_id;
+app.get('/discord', (request, response) => {
+  response.redirect(`https://login.ivao.aero/index.php?url=${services.host}`)
+});
+
+app.get('/ivao/landing', async (request, response) => {
+  const ivaoToken = request.query.IVAOTOKEN;
+
+  const oauthResult = await fetch(`https://login.ivao.aero/api.php?type=json&token=${ivaoToken}`);
+  const user = await oauthResult.json();
+
+  if (!user || !user.vid) {
+    return response.status(400).send('Unauthorized');
+  }
+
   const state = nanoid(50);
-  logger.info(`${ivaoId} taking off to Discord OAuth`);
-  users[state] = ivaoId;
+  users[state] = user;
+
+  logger.info(`${user.vid} taking off to Discord OAuth`);
 
   const url = oauth.generateAuthUrl({
     scope: ['identify', 'guilds', 'guilds.join'],
     state
   });
 
-  return res.redirect(url);
+  return response.redirect(url);
 });
 
 app.get('/discord/landing', async (request, response) => {
@@ -36,12 +49,14 @@ app.get('/discord/landing', async (request, response) => {
   if (!code || !state) {
     return response.status(400).send('Invalid Code');
   }
-  const vid = users[state];
-  logger.info(`${vid} landing from Discord OAuth`);
+  const user = users[state];
+  logger.info(`${user.vid} landing from Discord OAuth`);
   delete users[state];
-  if (!vid) {
+
+  if (!user) {
     return response.status(400).send('Invalid State');
   }
+
 
   if (code) {
     try {
@@ -70,63 +85,49 @@ app.get('/discord/landing', async (request, response) => {
       const userGuilds = await oauth.getUserGuilds(oauthData.access_token);
       const ivaoGuilds = userGuilds.filter((guild) => guild.id === services.ivao.server);
 
-      const userIvaoInfo = {
-        vid: '578091',
-        firstname: 'Rahul',
-        lastname: 'Singh',
-        pilotRating: 'FS1',
-        atcRating: 'AS1',
-        division: 'IN',
-        elitePilot: true
-      };
-
       const roles = [];
 
-      if (userIvaoInfo.division === 'IN') {
-        if (userIvaoInfo.elitePilot) {
-          roles.push('887436190767251518');
-        }
-
-        if (['AS1', 'AS2', 'AS3'].indexOf(userIvaoInfo.atcRating) !== -1) {
+      if (user.division === 'IN') {
+        if (user.ratingatc > 1) {
           roles.push('887423386106601573');
-        } else if (['ADC', 'APC', 'ACC', 'SEC', 'SAI', 'CAI'].indexOf(userIvaoInfo.atcRating) !== -1) {
-          roles.push('887423326790746173');
         }
 
-        if (['FS1', 'FS2', 'FS3'].indexOf(userIvaoInfo.pilotRating) !== -1) {
+        if (user.ratingpilot > 2) {
           roles.push('887423487436791818');
-        } else if (['PP', 'SPP', 'CP', 'ATP', 'SFI', 'CFI'].indexOf(userIvaoInfo.pilotRating) !== -1) {
-          roles.push('887423420147589171');
         }
       } else {
         roles.push('887432803699028039');
       }
 
       if (ivaoGuilds.length === 0) {
-        // add user
         const res = await oauth.addMember({
           accessToken: oauthData.access_token,
           botToken: services.discord.token,
           guildId: services.ivao.server,
           userId: userData.id,
-          nickname: `${userIvaoInfo.vid} - ${userIvaoInfo.firstname}`,
+          nickname: `${user.vid} - ${user.firstname}`,
           roles
         });
+
+        const memberJoinChannel = await client.channels.fetch(services.ivao.channels.memberJoin);
+        memberJoinChannel.send(`<@${userData.id}> welcome to the IVAO IN Official Discord Server! :ivao_in:`);
+
       } else {
         const ivaoGuild = ivaoGuilds[0];
         const guild = await client.guilds.fetch(services.ivao.server);
         const member = await guild.members.fetch(userData.id);
-        await member.setNickname(`${userIvaoInfo.vid} - ${userIvaoInfo.firstname}`);
+        await member.setNickname(`${user.vid} - ${user.firstname}`);
         await member.roles.set(roles);
       }
+
+      return response.redirect(`https://discord.com/channels/${services.ivao.server}/${services.ivao.channels.memberJoin}`);
     } catch (error) {
-      // NOTE: An unauthorized token will not throw an error;
-      // it will return a 401 Unauthorized response in the try block above
       return response.status(400).send('Unauthorized');
     }
   }
 
-  return response.redirect(`https://discord.com/channels/${services.ivao.server}`);
+  return response.status(400).send('Unauthorized');
+
   // return response.send('You have successfully joined the IVAO IN Discord Server. You can now close this page and return to the Discord application.');
 });
 
