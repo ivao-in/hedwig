@@ -11,7 +11,7 @@ client.on('ready', async () => {
     await pilotHandler();
     await atcHandler();
     await hallOfFameHandler();
-  }, 1000 * 60 * 0.5);
+  }, 1000 * 60 * 3);
 
   await downloadData();
   await pilotHandler();
