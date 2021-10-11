@@ -99,7 +99,7 @@ const hallOfFameHandler = async () => {
     const existingMessage = messages[0].embeds[0];
 
     existingMessage.setFooter(
-      `${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM HH:mmz')} • Updated at ${now.format('HH:mmz')}`
+      `${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM, HH:mmz')} • Updated at ${now.format('HH:mmz')}`
     );
 
     messages[0].edit(existingMessage);
@@ -118,7 +118,7 @@ const hallOfFameHandler = async () => {
       .setTitle(`🏆 ATC Hall of Fame 🏆`)
       .setColor('#A1ADEE')
       .setDescription(`Not enough ATCs data available.`)
-      .setFooter(`${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM HH:mmz')} • Updated at ${now.format('HH:mmz')}`);
+      .setFooter(`${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM, HH:mmz')} • Updated at ${now.format('HH:mmz')}`);
 
     await atcHallOfFameChannel.send(atcHallOfFameEmbed);
   } else {
@@ -135,7 +135,7 @@ const hallOfFameHandler = async () => {
       .setTitle(`🏆 ATC Hall of Fame 🏆`)
       .setColor('#A1ADEE')
       .setDescription(`${description}`)
-      .setFooter(`${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM HH:mmz')} • Updated at ${now.format('HH:mmz')}`);
+      .setFooter(`${client.user.username} • Data since ${dayjs.utc(metadata.atc).format('DD MMM, HH:mmz')} • Updated at ${now.format('HH:mmz')}`);
 
     await atcHallOfFameChannel.send(atcHallOfFameEmbed);
   }

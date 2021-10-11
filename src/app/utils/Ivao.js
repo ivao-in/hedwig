@@ -232,8 +232,8 @@ module.exports = class Ivao {
             t[22].length === 2
               ? `00:${t[22].substring(0, 2)}z`
               : t[22].length === 3
-                ? `0${t[22].substring(0, 1)}:${t[22].substring(1, 3)}z`
-                : `${t[22].substring(0, 2)}:${t[22].substring(2, 4)}z`,
+              ? `0${t[22].substring(0, 1)}:${t[22].substring(1, 3)}z`
+              : `${t[22].substring(0, 2)}:${t[22].substring(2, 4)}z`,
           connectionStartTime: new Date(formatDate(t[37])),
           connectionMilliseconds: new Date() - new Date(formatDate(t[37]))
         };
