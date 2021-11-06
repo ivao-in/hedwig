@@ -46,14 +46,14 @@ function storeAtcData(activeAtcs) {
           data[atc.vid].lastFrequency = atc.frequency;
         }
       } else {
-        logger.info(`${atc.vid} [${atc.callsign}] connected!`);
+        // logger.info(`${atc.vid} [${atc.callsign}] connected!`);
         data[atc.vid].lastSession = atc.connectionMilliseconds;
         data[atc.vid].lastCallsign = atc.callsign;
         data[atc.vid].lastFrequency = atc.frequency;
         data[atc.vid].online = true;
       }
     } else {
-      logger.info(`${atc.vid} [${atc.callsign}] connected!`);
+      // logger.info(`${atc.vid} [${atc.callsign}] connected!`);
       data[atc.vid] = {
         milliseconds: 0,
         lastSession: atc.connectionMilliseconds,
@@ -73,7 +73,7 @@ function storeAtcData(activeAtcs) {
     });
 
     if (!found && data[key].online === true) {
-      logger.info(`${key} [${data[key].lastCallsign}] disconnected!`);
+      // logger.info(`${key} [${data[key].lastCallsign}] disconnected!`);
       data[key].milliseconds += data[key].lastSession;
       data[key].lastSession = 0;
       data[key].lastCallsign = '';
@@ -123,7 +123,7 @@ function storePilotData(activePilots, type) {
           data[pilot.vid].lastDepartureTime = pilot.departureTime;
         }
       } else {
-        logger.info(`${pilot.vid} [${pilot.callsign}] connected!`);
+        // logger.info(`${pilot.vid} [${pilot.callsign}] connected!`);
         data[pilot.vid].lastSession = pilot.connectionMilliseconds;
         data[pilot.vid].lastCallsign = pilot.callsign;
         data[pilot.vid].lastDepartureAerodrome = pilot.departureAerodrome;
@@ -132,7 +132,7 @@ function storePilotData(activePilots, type) {
         data[pilot.vid].online = true;
       }
     } else {
-      logger.info(`${pilot.vid} [${pilot.callsign}] connected!`);
+      // logger.info(`${pilot.vid} [${pilot.callsign}] connected!`);
       data[pilot.vid] = {
         milliseconds: 0,
         lastSession: pilot.connectionMilliseconds,
@@ -154,7 +154,7 @@ function storePilotData(activePilots, type) {
     });
 
     if (!found && data[key].online === true) {
-      logger.info(`${key} [${data[key].lastCallsign}] disconnected!`);
+      // logger.info(`${key} [${data[key].lastCallsign}] disconnected!`);
       data[key].milliseconds += data[key].lastSession;
       data[key].lastSession = 0;
       data[key].lastCallsign = '';
