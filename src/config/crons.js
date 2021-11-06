@@ -33,7 +33,10 @@ client.on('ready', async () => {
 
     // 0 0 1 * *
     // Reset the pilots and atc data at 00:00 on the first day of the month
-    cron.schedule('*/3 * * * *', async () => {
+
+    // 0 0 */1 * *
+    // Reset the pilots and atc data at 00:00 every day
+    cron.schedule('0 0 */1 * *', async () => {
       lock.acquire('data', async () => {
         try {
           logger.info(`Resetting ATC/Pilot data...`);
