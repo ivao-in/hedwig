@@ -18,7 +18,7 @@ const oauth = new DiscordOauth2({
 });
 
 app.get('/discord', (request, response) => {
-  response.redirect(`https://login.ivao.aero/index.php?url=${services.host}`)
+  response.redirect(`https://login.ivao.aero/index.php?url=${services.host}/ivao/landing`)
 });
 
 app.get('/ivao/landing', async (request, response) => {
@@ -26,6 +26,8 @@ app.get('/ivao/landing', async (request, response) => {
 
   const oauthResult = await fetch(`https://login.ivao.aero/api.php?type=json&token=${ivaoToken}`);
   const user = await oauthResult.json();
+
+  logger.info(user);
 
   if (!user || !user.vid) {
     return response.status(400).send('Unauthorized');
