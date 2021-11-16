@@ -14,7 +14,8 @@ module.exports = {
       atc: process.env.ATC_CHANNEL,
       pilot: process.env.PILOT_CHANNEL,
       atcHallOfFame: process.env.ATC_HALL_OF_FAME_CHANNEL,
-      memberJoin: process.env.MEMBER_JOIN_CHANNEL
+      memberJoin: process.env.MEMBER_JOIN_CHANNEL,
+      staff: process.env.STAFF_CHANNEL
     }
   },
   jwt: {
