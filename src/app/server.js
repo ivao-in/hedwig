@@ -1,7 +1,9 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const { nanoid } = require('nanoid');
+const fs = require('fs');
 const DiscordOauth2 = require('discord-oauth2');
+const AsyncLock = require('async-lock');
 
 const services = require('../config/services');
 const client = require('./client');
@@ -11,6 +13,16 @@ const app = express();
 
 const users = {};
 
+if (!fs.existsSync(`${process.cwd()}/data`)) {
+  fs.mkdirSync(`${process.cwd()}/data`);
+}
+
+if (!fs.existsSync(`${process.cwd()}/data/users.json`)) {
+  fs.writeFileSync(`${process.cwd()}/data/users.json`, JSON.stringify({}), 'utf8');
+}
+
+const lock = new AsyncLock();
+
 const oauth = new DiscordOauth2({
   clientId: services.discord.clientId,
   clientSecret: services.discord.clientSecret,
@@ -18,7 +30,7 @@ const oauth = new DiscordOauth2({
 });
 
 app.get('/discord', (request, response) => {
-  response.redirect(`https://login.ivao.aero/index.php?url=${services.host}/ivao/landing`)
+  response.redirect(`https://login.ivao.aero/index.php?url=${services.host}/ivao/landing`);
 });
 
 app.get('/ivao/landing', async (request, response) => {
@@ -58,7 +70,6 @@ app.get('/discord/landing', async (request, response) => {
   if (!user) {
     return response.status(400).send('Invalid State');
   }
-
 
   if (code) {
     try {
@@ -102,18 +113,35 @@ app.get('/discord/landing', async (request, response) => {
       }
 
       if (ivaoGuilds.length === 0) {
-        const res = await oauth.addMember({
-          accessToken: oauthData.access_token,
-          botToken: services.discord.token,
-          guildId: services.ivao.server,
-          userId: userData.id,
-          nickname: `${user.vid} - ${user.firstname}`,
-          roles
+        lock.acquire('oauth', async () => {
+          const userMapping = fs.readFileSync(`${process.cwd()}/data/users.json`, 'utf8');
+
+          const userMappingData = JSON.parse(userMapping);
+
+          if (userMappingData[user.vid]) {
+            const guild = client.guilds.cache.get(services.ivao.server);
+            const member = guild.members.cache.get(userMappingData[user.vid]);
+            if (member) {
+              member.kick('Linked new account');
+            }
+          } else {
+            const res = await oauth.addMember({
+              accessToken: oauthData.access_token,
+              botToken: services.discord.token,
+              guildId: services.ivao.server,
+              userId: userData.id,
+              nickname: `${user.vid} - ${user.firstname}`,
+              roles
+            });
+
+            userMappingData[user.vid] = userData.id;
+
+            const memberJoinChannel = await client.channels.fetch(services.ivao.channels.memberJoin);
+            memberJoinChannel.send(`<@${userData.id}> welcome to the IVAO IN Official Discord Server! :ivao_in:`);
+          }
+
+          fs.writeFileSync(`${process.cwd()}/data/users.json`, JSON.stringify(userMappingData));
         });
-
-        const memberJoinChannel = await client.channels.fetch(services.ivao.channels.memberJoin);
-        memberJoinChannel.send(`<@${userData.id}> welcome to the IVAO IN Official Discord Server! :ivao_in:`);
-
       } else {
         const ivaoGuild = ivaoGuilds[0];
         const guild = await client.guilds.fetch(services.ivao.server);

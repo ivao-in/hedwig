@@ -20,7 +20,7 @@ const ivao = {
 };
 
 const atcCallsignRegex = /^V[AEIO][A-Z]{2}_[A-Z_]*$/;
-// const atcCallsignRegex = /^[A-Z]{4}_[A-Z_]*$/;
+// const atcCallsignRegex = /^L[A-Z]{3}_[A-Z_]*$/;
 const indianAirspaceRegex = /^V[AEIO][A-Z]{2}$/;
 
 function formatDate(date) {

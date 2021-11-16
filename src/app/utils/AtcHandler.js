@@ -230,4 +230,4 @@ const atcHandler = async () => {
   atcCache.set('in', atcList);
 };
 
-module.exports = { atcHandler, hallOfFameHandler };
+module.exports = { getHallOfFameAtc, atcHandler, hallOfFameHandler };
