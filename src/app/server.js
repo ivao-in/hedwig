@@ -1,3 +1,4 @@
+/* eslint-disable no-unreachable */
 const express = require('express');
 const fetch = require('node-fetch');
 const { nanoid } = require('nanoid');
@@ -30,10 +31,12 @@ const oauth = new DiscordOauth2({
 });
 
 app.get('/discord', (request, response) => {
+  return response.status(404).send('Not found');
   response.redirect(`https://login.ivao.aero/index.php?url=${services.host}/ivao/landing`);
 });
 
 app.get('/ivao/landing', async (request, response) => {
+  return response.status(404).send('Not found');
   const ivaoToken = request.query.IVAOTOKEN;
 
   const oauthResult = await fetch(`https://login.ivao.aero/api.php?type=json&token=${ivaoToken}`);
@@ -59,6 +62,7 @@ app.get('/ivao/landing', async (request, response) => {
 });
 
 app.get('/discord/landing', async (request, response) => {
+  return response.status(404).send('Not found');
   const { code, state } = request.query;
   if (!code || !state) {
     return response.status(400).send('Invalid Code');
