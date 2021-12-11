@@ -32,12 +32,10 @@ client.on('ready', async () => {
       }
     });
   });
+
   // 0 0 1 * *
   // Reset the pilots and atc data at 00:00 on the first day of the month
-
-  // 0 0 */1 * *
-  // Reset the pilots and atc data at 00:00 every day
-  cron.schedule('0 0 */1 * *', async () => {
+  cron.schedule('0 0 1 * *', async () => {
     lock.acquire(
       'data',
       async () => {
@@ -71,8 +69,7 @@ client.on('ready', async () => {
               .filter((a) => a.minutes > 0)
               .map(
                 (a, i) =>
-                  `${ranks[i]} **[${a.vid}](https://www.ivao.aero/Member.aspx?Id=${a.vid})** | ${Math.floor(a.minutes / 60)} hrs ${
-                    a.minutes % 60
+                  `${ranks[i]} **[${a.vid}](https://www.ivao.aero/Member.aspx?Id=${a.vid})** | ${Math.floor(a.minutes / 60)} hrs ${a.minutes % 60
                   } mins`
               )
               .join('\n');
