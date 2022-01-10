@@ -15,7 +15,7 @@ client.registry
   .registerDefaultTypes()
   .registerGroups([
     ['util', 'Utility commands'],
-    // ['auth', 'Authentication commands'],
+    ['admin', 'Admin commands'],
     ['atc', 'ATC commands'],
     ['pilot', 'Pilot commands']
   ])
