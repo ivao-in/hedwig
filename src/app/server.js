@@ -30,22 +30,71 @@ const oauth = new DiscordOauth2({
   redirectUri: `${services.host}/discord/landing`
 });
 
+const staffRoles = {
+  // DIVISION HQ
+  'IN-DIR': '',
+  'IN-ADIR': '',
+
+  // Special Operation
+  'IN-SOC': '730675406684028998',
+  'IN-SOAC': '730675406684028998',
+
+  // Flight Operations
+  'IN-FOC': '730674599942946856',
+  'IN-FOAC': '730674599942946856',
+
+  // ATC Operations
+  'IN-AOC': '730674367561859122',
+  'IN-AOAC': '730674367561859122',
+
+  // Training
+  'IN-TC': '730675387646083095',
+  'IN-TAC': '730675387646083095',
+  'IN-TA1': '730675387646083095',
+  'IN-TA2': '730675387646083095',
+
+  // MEMBERSHIP
+  'IN-MC': '730674117975605248',
+  'IN-MAC': '730674117975605248',
+  'IN-MA1': '730674117975605248',
+
+  // EVENTS
+  'IN-EC': '730674881292664863',
+  'IN-EAC': '730674881292664863',
+  'IN-EA1': '730674881292664863',
+  'IN-EA2': '730674881292664863',
+  'IN-EA3': '730674881292664863',
+
+  // PUBLIC RELATIONS
+  'IN-PRC': '730675118627356733',
+  'IN-PRAC': '730675118627356733',
+
+  // WEB DEVELOPMENT
+  'IN-WM': '',
+  'IN-AWM': '',
+}
+
+
+app.get('/', (request, response) => response.status(200).send('🚀'));
+
 app.get('/discord', (request, response) => {
-  return response.status(404).send('Not found');
   response.redirect(`https://login.ivao.aero/index.php?url=${services.host}/ivao/landing`);
 });
 
 app.get('/ivao/landing', async (request, response) => {
-  return response.status(404).send('Not found');
   const ivaoToken = request.query.IVAOTOKEN;
 
   const oauthResult = await fetch(`https://login.ivao.aero/api.php?type=json&token=${ivaoToken}`);
   const user = await oauthResult.json();
 
-  logger.info(user);
+  logger.info(JSON.stringify(user));
 
   if (!user || !user.vid) {
     return response.status(400).send('Unauthorized');
+  }
+
+  if (user.rating < 2) {
+    return response.status(400).send('Your account is inactive or suspended from IVAO');
   }
 
   const state = nanoid(50);
@@ -62,7 +111,6 @@ app.get('/ivao/landing', async (request, response) => {
 });
 
 app.get('/discord/landing', async (request, response) => {
-  return response.status(404).send('Not found');
   const { code, state } = request.query;
   if (!code || !state) {
     return response.status(400).send('Invalid Code');
@@ -73,6 +121,10 @@ app.get('/discord/landing', async (request, response) => {
 
   if (!user) {
     return response.status(400).send('Invalid State');
+  }
+
+  if (user.rating < 2) {
+    return response.status(400).send('Your account is inactive or suspended from IVAO');
   }
 
   if (code) {
@@ -103,17 +155,34 @@ app.get('/discord/landing', async (request, response) => {
       const ivaoGuilds = userGuilds.filter((guild) => guild.id === services.ivao.server);
 
       const roles = [];
+      let staffTitle = '';
 
       if (user.division === 'IN') {
         if (user.ratingatc > 1) {
-          roles.push('887423386106601573');
+          roles.push('445081680412278784');
         }
 
-        if (user.ratingpilot > 2) {
-          roles.push('887423487436791818');
+        if (user.ratingpilot > 1) {
+          roles.push('445086612091830272');
+        }
+
+        if (user.staff) {
+          roles.push('445099211395170304');
+
+          const staffPositions = user.staff.split(':');
+          const divisionStaffPositions = staffPositions.filter((position) => position.startsWith('IN-'));
+          const hqStaffPositions = staffPositions.filter((position) => divisionStaffPositions.indexOf(position) === -1);
+
+          if (hqStaffPositions.length > 0) {
+            staffTitle = `${hqStaffPositions.join('/')}/`;
+          } else if (divisionStaffPositions.length > 0) {
+            staffTitle = `IN-${divisionStaffPositions.map((position) => position.substring(3)).join('/')}`;
+          }
+
+          roles.push(...(staffPositions.map((position) => staffRoles[position]).filter((position) => position)));
         }
       } else {
-        roles.push('887432803699028039');
+        roles.push('612571349558231070');
       }
 
       if (ivaoGuilds.length === 0) {
@@ -147,11 +216,15 @@ app.get('/discord/landing', async (request, response) => {
           fs.writeFileSync(`${process.cwd()}/data/users.json`, JSON.stringify(userMappingData));
         });
       } else {
-        const ivaoGuild = ivaoGuilds[0];
+        // const ivaoGuild = ivaoGuilds[0];
         const guild = await client.guilds.fetch(services.ivao.server);
         const member = await guild.members.fetch(userData.id);
-        await member.setNickname(`${user.vid} - ${user.firstname}`);
+        await member.setNickname(`${staffTitle || user.vid} - ${user.firstname}`);
+        const excludedRoles = (await member.roles.fetch()).filter((r) => ["Discord Manager", "Trainer", "Elite Pilot"].includes(r.name))
         await member.roles.set(roles);
+        if (excludedRoles.length > 0) {
+          await member.roles.add(excludedRoles);
+        }
       }
 
       return response.redirect(`https://discord.com/channels/${services.ivao.server}/${services.ivao.channels.memberJoin}`);
