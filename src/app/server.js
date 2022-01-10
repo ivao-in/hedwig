@@ -222,6 +222,8 @@ app.get('/discord/landing', async (request, response) => {
         }
       }
 
+      userMappingData[user.vid] = userData.id;
+
       const userGuilds = await oauth.getUserGuilds(oauthData.access_token);
       const ivaoGuilds = userGuilds.filter((guild) => guild.id === services.ivao.server);
 
@@ -237,8 +239,6 @@ app.get('/discord/landing', async (request, response) => {
         });
 
         logger.info(`${user.vid} added to Discord server`);
-
-        userMappingData[user.vid] = userData.id;
 
         const memberJoinChannel = await client.channels.fetch(services.ivao.channels.memberJoin);
         await memberJoinChannel.send(`<@${userData.id}> welcome to the IVAO IN Official Discord Server! : ivao_in: `);
@@ -256,10 +256,9 @@ app.get('/discord/landing', async (request, response) => {
           await member.roles.add(excludedRoles);
           logger.info(`${user.vid} excluded roles added: ${excludedRoles} `);
         }
-
-        fs.writeFileSync(`${process.cwd()} /data/users.json`, JSON.stringify(userMappingData, null, 2));
-
       }
+
+      fs.writeFileSync(`${process.cwd()}/data/users.json`, JSON.stringify(userMappingData, null, 2), 'utf8');
     });
 
     return response.redirect(`https://discord.com/channels/${services.ivao.server}/${services.ivao.channels.memberJoin}`);
