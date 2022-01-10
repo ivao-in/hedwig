@@ -241,7 +241,7 @@ app.get('/discord/landing', async (request, response) => {
         logger.info(`${user.vid} added to Discord server`);
 
         const memberJoinChannel = await client.channels.fetch(services.ivao.channels.memberJoin);
-        await memberJoinChannel.send(`<@${userData.id}> welcome to the IVAO IN Official Discord Server! : ivao_in: `);
+        await memberJoinChannel.send(`<@${userData.id}> welcome to the IVAO IN Official Discord Server! :ivao_in: `);
       } else {
         logger.info(`${user.vid} is already in the IVAO server`);
         const guild = await client.guilds.fetch(services.ivao.server);
